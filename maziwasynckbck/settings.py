@@ -197,6 +197,8 @@ DEBUG = config('DEBUG', cast=bool)
 
 ALLOWED_HOSTS = [
     'mysql-maziwasyncbck.alwaysdata.net',
+    'maziwasyncbck.alwaysdata.net',
+    'www.maziwasyncbck.alwaysdata.net',
     '127.0.0.1',
     'localhost',
     'tidings-faculty-cyclist.ngrok-free.dev',
@@ -205,7 +207,6 @@ ALLOWED_HOSTS = [
 ]
 
 AUTH_USER_MODEL = 'core.User'
-
 
 # Application definition
 
