@@ -323,6 +323,9 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True,
 }
 
+# Security - Disable Cross-Origin-Opener-Policy to avoid warnings on HTTP
+SECURE_CROSS_ORIGIN_OPENER_POLICY = None
+
 # CORS
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',
