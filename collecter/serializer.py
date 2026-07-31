@@ -4,10 +4,11 @@ from core.models import MilkCollection, Feedback, Notice
 
 class RecentCollectionSerializer(serializers.ModelSerializer):
     farmer = serializers.StringRelatedField()
+    porter = serializers.StringRelatedField()
 
     class Meta:
         model = MilkCollection
-        fields = ['id', 'farmer', 'litres', 'session', 'collection_date', 'total_amount']
+        fields = ['id', 'farmer', 'porter', 'litres', 'session', 'collection_date', 'total_amount']
 
 
 class FeedbackSerializer(serializers.ModelSerializer):
