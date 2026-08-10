@@ -8,7 +8,7 @@ class RecentCollectionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MilkCollection
-        fields = ['id', 'farmer', 'porter', 'litres', 'session', 'collection_date', 'total_amount']
+        fields = ['id', 'farmer', 'porter', 'litres', 'session', 'collection_date', 'total_amount', 'price_per_litre']
 
 
 class FeedbackSerializer(serializers.ModelSerializer):

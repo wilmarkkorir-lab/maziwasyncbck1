@@ -64,7 +64,7 @@ class MilkCollectionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MilkCollection
-        fields = ['id', 'porter', 'farmer', 'litres', 'session', 'collection_date', 'total_amount']
+        fields = ['id', 'porter', 'farmer', 'litres', 'session', 'collection_date', 'total_amount', 'price_per_litre']
 
 
 @api_view(["POST"])
