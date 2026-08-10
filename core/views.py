@@ -48,6 +48,7 @@ def Register(request):
                 first_name=request.data.get('first_name'),
                 last_name=request.data.get('last_name'),
                 national_id=request.data.get('national_id'),
+                farm_name=request.data.get('farm_name'),
             )
         elif role == 'porter':
             PorterProfile.objects.create(
@@ -57,6 +58,7 @@ def Register(request):
                 last_name=request.data.get('last_name'),
                 national_id=request.data.get('national_id'),
                 employee_id=request.data.get('employee_id'),
+                route_name=request.data.get('route_name'),
             )
 
         # single response for all roles
