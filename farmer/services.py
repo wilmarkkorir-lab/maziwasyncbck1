@@ -37,7 +37,8 @@ class CattleAIService:
                 ],
                 model=self.model_name,
                 temperature=0.0,
-                response_format={"type": "json_object"}
+                response_format={"type": "json_object"},
+                max_tokens=200
             )
             response_text = (completion.choices[0].message.content or "").strip()
             if not response_text:
@@ -62,6 +63,7 @@ class CattleAIService:
                 ],
                 model=self.model_name,
                 temperature=0.3,
+                max_tokens=400
             )
             content = (completion.choices[0].message.content or "").strip()
             if not content:
@@ -72,8 +74,47 @@ class CattleAIService:
             print(f"Groq Treatment Error: {e}")
             return "Treatment temporarily unavailable. Please consult a veterinarian."
 
+    def predict_disease_with_groq(self, animal_type, age, temp, description):
+        system_prompt = f"""
+            You are a veterinary expert. Based on the animal type, age, temperature and symptoms described,
+            predict the most likely cattle disease from this list: {list(self.model.classes_) if hasattr(self.model, 'classes_') else 'common cattle diseases'}.
+            Respond with a JSON object: {{"predicted_disease": "disease_name", "confidence": "high/medium/low"}}
+        """
+        try:
+            completion = self.groq_client.chat.completions.create(
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": f"Animal: {animal_type}, Age: {age}, Temperature: {temp}, Symptoms: {description}"}
+                ],
+                model=self.model_name,
+                temperature=0.2,
+                response_format={"type": "json_object"},
+                max_tokens=150
+            )
+            response_text = (completion.choices[0].message.content or "").strip()
+            if not response_text:
+                print("Groq Predict Warning: empty response content")
+                return "Unknown"
+            result_json = json.loads(response_text)
+            return result_json.get('predicted_disease', 'Unknown')
+        except Exception as e:
+            print(f"Groq Predict Error: {e}")
+            return "Unknown"
+
     def predict(self, animal_type, age, temp, description):
         extracted_symptoms = self.extract_symptoms_with_groq(description)
+
+        if not extracted_symptoms:
+            predicted_disease = self.predict_disease_with_groq(animal_type, age, temp, description)
+            treatment_plan = self.get_treatment_recommendation(predicted_disease, animal_type)
+
+            return {
+                "status": "success",
+                "extracted_symptoms_by_ai": [],
+                "predicted_disease": predicted_disease,
+                "treatment_recommendation": treatment_plan,
+                "prediction_source": "groq_fallback"
+            }
 
         input_data = {feature: 0 for feature in self.model_features}
         input_data['Age'] = age
@@ -98,4 +139,5 @@ class CattleAIService:
             "extracted_symptoms_by_ai": extracted_symptoms,
             "predicted_disease": predicted_disease,
             "treatment_recommendation": treatment_plan,
+            "prediction_source": "local_model"
         }
