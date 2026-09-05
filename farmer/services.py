@@ -18,7 +18,10 @@ class CattleAIService:
             if f not in ['Age', 'Temperature'] and not f.startswith('Animal')
         ]
 
+        # API key + model are read from the environment so they can be swapped
+        # without touching code (e.g. point GROQ_MODEL at a fine-tuned model).
         self.groq_client = Groq(api_key=os.environ.get('GROQ_API_KEY'))
+        self.model_name = os.environ.get('GROQ_MODEL', 'llama-3.1-8b-instant')
 
     def extract_symptoms_with_groq(self, farmer_text):
         system_prompt = f"""
@@ -32,7 +35,7 @@ class CattleAIService:
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": f"Farmer text: \"{farmer_text}\""}
                 ],
-                model="llama-3.1-8b-instant",
+                model=self.model_name,
                 temperature=0.0,
                 response_format={"type": "json_object"}
             )
@@ -54,7 +57,7 @@ class CattleAIService:
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": f"Treatment recommendation for a {animal_type} with {disease}"}
                 ],
-                model="llama-3.1-8b-instant",
+                model=self.model_name,
                 temperature=0.3,
             )
             return completion.choices[0].message.content.strip()

@@ -17,7 +17,10 @@ class FarmerDashboard(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        farmer = request.user.farmer_profile
+        try:
+            farmer = request.user.farmer_profile
+        except FarmerProfile.DoesNotExist:
+            raise PermissionDenied("Only farmers can view the dashboard")
         collections = MilkCollection.objects.filter(farmer=farmer).order_by('-created_at')[:5]
         total_collections = collections.count()
         total_litres = collections.aggregate(total=Sum('litres'))['total'] or 0

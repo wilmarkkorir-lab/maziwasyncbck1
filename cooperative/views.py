@@ -68,18 +68,18 @@ class AdminDashboardData(APIView):
         ).data
         # dashboard response
         return Response({
-            'total_farmers': total_farmers,
-            'total_porters': total_porters,
+            'farmers': total_farmers,
+            'porters': total_porters,
             'total_litres': total_litres,
-            'total_amount': total_amount,
+            'total_revenue': total_amount,
             'today_litres': today_litres,
-            'today_earning': today_earning,
-            'week_litres':week_litres,
-            'week_earning':week_earning,
-            'month_litres':month_litres,
-            'month_earning':month_earning,
-            'pending_feedbacks': pending_feedbacks,
-            'resolved_feedbacks':pending_resolved,
+            'today_revenue': today_earning,
+            'weekly_liters':week_litres,
+            'weekly_revenue':week_earning,
+            'monthly_liters':month_litres,
+            'monthly_revenue':month_earning,
+            'pending_feedback': pending_feedbacks,
+            'resolved_feedback':pending_resolved,
             'top_farmers':top_farmers_data,
             'recent_collections':Recent_Collections_data,
     })
