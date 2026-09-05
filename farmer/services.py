@@ -43,7 +43,8 @@ class CattleAIService:
         system_prompt = f"""
             You are a veterinary assistant. Analyse the text and extract symptoms matching exactly this list:
             {self.valid_symptoms}
-            Respond with a JSON object: {{"symptoms": ["symptom_name"]}}
+            Respond with ONLY a JSON object, no markdown, no extra text:
+            {{"symptoms": ["symptom_name"]}}
         """
         try:
             completion = self.groq_client.chat.completions.create(
@@ -53,14 +54,10 @@ class CattleAIService:
                 ],
                 model=self.model_name,
                 temperature=0.0,
-                response_format={"type": "json_object"},
                 max_tokens=200
             )
             response_text = (completion.choices[0].message.content or "").strip()
-            if not response_text:
-                print("Groq Extraction Warning: empty response content")
-                return []
-            result_json = json.loads(response_text)
+            result_json = self._extract_json(response_text)
             return result_json.get('symptoms', [])
         except Exception as e:
             print(f"Groq Extraction Error: {e}")
@@ -105,9 +102,12 @@ class CattleAIService:
                 ],
                 model=self.model_name,
                 temperature=0.2,
-                max_tokens=200
+                max_tokens=500
             )
             response_text = (completion.choices[0].message.content or "").strip()
+            if not response_text:
+                print("Groq Predict Warning: empty response content, finish_reason:", completion.choices[0].finish_reason)
+                return "Unable to determine", "low", "The AI model did not return a diagnosis. Please consult a veterinarian."
             result_json = self._extract_json(response_text)
             return (
                 result_json.get('predicted_disease', 'Unknown'),
