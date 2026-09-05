@@ -40,11 +40,10 @@ class CattleAIService:
         return {}
 
     def extract_symptoms_with_groq(self, farmer_text):
-        system_prompt = f"""
-            You are a veterinary assistant. Analyse the text and extract symptoms matching exactly this list:
-            {self.valid_symptoms}
+        system_prompt = """
+            You are a veterinary assistant. Analyse the text and extract ALL observable animal symptoms mentioned.
             Respond with ONLY a JSON object, no markdown, no extra text:
-            {{"symptoms": ["symptom_name"]}}
+            {"symptoms": ["symptom1", "symptom2", ...]}
         """
         try:
             completion = self.groq_client.chat.completions.create(
@@ -77,11 +76,11 @@ class CattleAIService:
                 ],
                 model=self.model_name,
                 temperature=0.3,
-                max_tokens=400
+                max_tokens=500
             )
             content = (completion.choices[0].message.content or "").strip()
             if not content:
-                print("Groq Treatment Warning: empty response content")
+                print("Groq Treatment Warning: empty response content, finish_reason:", completion.choices[0].finish_reason)
                 return "Treatment generation failed. Please consult a veterinarian."
             return content
         except Exception as e:
