@@ -39,7 +39,10 @@ class CattleAIService:
                 temperature=0.0,
                 response_format={"type": "json_object"}
             )
-            response_text = completion.choices[0].message.content.strip()
+            response_text = (completion.choices[0].message.content or "").strip()
+            if not response_text:
+                print("Groq Extraction Warning: empty response content")
+                return []
             result_json = json.loads(response_text)
             return result_json.get('symptoms', [])
         except Exception as e:
@@ -60,10 +63,14 @@ class CattleAIService:
                 model=self.model_name,
                 temperature=0.3,
             )
-            return completion.choices[0].message.content.strip()
+            content = (completion.choices[0].message.content or "").strip()
+            if not content:
+                print("Groq Treatment Warning: empty response content")
+                return "Treatment generation failed. Please consult a veterinarian."
+            return content
         except Exception as e:
             print(f"Groq Treatment Error: {e}")
-            return "Treatment temporarily unavailable"
+            return "Treatment temporarily unavailable. Please consult a veterinarian."
 
     def predict(self, animal_type, age, temp, description):
         extracted_symptoms = self.extract_symptoms_with_groq(description)
