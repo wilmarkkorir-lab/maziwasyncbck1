@@ -1,5 +1,6 @@
 import os
 import json
+import re
 import joblib
 from groq import Groq
 from dotenv import load_dotenv
@@ -21,8 +22,22 @@ class CattleAIService:
 
         self.groq_client = Groq(api_key=os.environ.get('GROQ_API_KEY'))
         self.model_name = os.environ.get('GROQ_MODEL', 'llama-3.1-8b-instant')
-        # Set USE_LOCAL_MODEL=true in .env to switch back to the local ML model
         self.use_local_model = os.environ.get('USE_LOCAL_MODEL', 'false').lower() == 'true'
+
+    def _extract_json(self, text):
+        """Extract JSON from model response using regex as fallback."""
+        if not text:
+            return {}
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError:
+            match = re.search(r'\{.*\}', text, re.DOTALL)
+            if match:
+                try:
+                    return json.loads(match.group(0))
+                except json.JSONDecodeError:
+                    pass
+        return {}
 
     def extract_symptoms_with_groq(self, farmer_text):
         system_prompt = f"""
@@ -53,8 +68,9 @@ class CattleAIService:
 
     def get_treatment_recommendation(self, disease, animal_type):
         system_prompt = """
-            You are a veterinary expert. Provide clear, concise and professional treatment recommendations
-            under 120 words using short bullet points. Include a vet disclaimer.
+            You are a veterinary expert. Generate treatment recommendations for the given disease.
+            RULES: Always provide treatment advice. Never say you need more information.
+            Format: 4-6 short bullet points under 120 words. End with a vet disclaimer.
         """
         try:
             completion = self.groq_client.chat.completions.create(
@@ -78,7 +94,7 @@ class CattleAIService:
     def predict_disease_with_groq(self, animal_type, age, temp, description):
         system_prompt = """
             You are a veterinary expert. Based on the animal type, age, temperature and symptoms described,
-            predict the most likely disease. Respond with a JSON object:
+            predict the most likely disease. Respond with ONLY a JSON object, no markdown, no extra text:
             {"predicted_disease": "disease_name", "confidence": "high/medium/low", "reasoning": "brief clinical reasoning"}
         """
         try:
@@ -89,14 +105,10 @@ class CattleAIService:
                 ],
                 model=self.model_name,
                 temperature=0.2,
-                response_format={"type": "json_object"},
                 max_tokens=200
             )
             response_text = (completion.choices[0].message.content or "").strip()
-            if not response_text:
-                print("Groq Predict Warning: empty response content")
-                return "Unknown", "low", "No response from AI"
-            result_json = json.loads(response_text)
+            result_json = self._extract_json(response_text)
             return (
                 result_json.get('predicted_disease', 'Unknown'),
                 result_json.get('confidence', 'low'),
